@@ -31,7 +31,24 @@ export const handler = async (
     );
 
     const resultItems = queryResult.Items ?? [];
-    return response(200, { data: resultItems.filter(isRoleItem).map(toRole) });
+ const actor = event.queryStringParameters?.actor;
+
+// If actor id is valid
+if (actor !== undefined && parseId(actor) === undefined) {
+  return response(400,{message: "Invalid actor ID" });
+}
+// Actor roles
+if (actor !== undefined) {
+  return response(200, {
+    data: resultItems.filter(isRoleItem).map(toRole)
+      .filter(role => role.actorId === parseId(actor)),
+  });
+}
+// Return all the roles
+return response(200, {
+  data: resultItems.filter(isRoleItem).map(toRole),
+});
+
   } catch (err) {
     console.error("DynamoDB error:", err);
     return response(500, {
