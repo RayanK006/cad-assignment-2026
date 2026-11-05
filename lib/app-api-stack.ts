@@ -93,9 +93,21 @@ export class AppApiStack extends cdk.Stack {
     };
     // Routes
     const moviesResource = api.root.addResource('movies');
+    const addRolesResource = moviesResource.addResource('roles');
 
+table.grantReadWriteData(addMovieRoleFn);
     const movieRolesResource = moviesResource.addResource('{movieID}').addResource('roles');
-    movieRolesResource.addMethod('GET', new apig.LambdaIntegration(getMovieRolesFn) );
+    movieRolesResource.addMethod('GET',new apig.LambdaIntegration(getMovieRolesFn),userAuth);
+    addRolesResource.addMethod('POST',new apig.LambdaIntegration(addMovieRoleFn),{ apiKeyRequired: true });
+   //added APIkey and usage plan
+    const apiKey = api.addApiKey('MovieCastApiKey');
+    const usagePlan = api.addUsagePlan('MovieCastUsagePlan',{name: 'MovieCastUsagePlan',});
+
+usagePlan.addApiStage({
+  stage: api.deploymentStage,
+});
+
+usagePlan.addApiKey(apiKey);
 
     api.root
       .addResource('actors')
